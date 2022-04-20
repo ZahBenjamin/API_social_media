@@ -1,13 +1,13 @@
 const { Thought, User } = require('../models');
 
 module.exports = {
-  // get users
+  // get thought --
   getThoughts(req, res) {
     User.find()
       .then((users) => res.json(users))
       .catch((err) => res.status(500).json(err));
   },
-  // get single user
+  // get single thought --
   getSingleThought(req, res) {
     User.findOne({ _id: req.params.userId })
       .select('-__v')
@@ -18,13 +18,13 @@ module.exports = {
       )
       .catch((err) => res.status(500).json(err));
   },
-  // create a new user
+  // create a new user --
   createThought(req, res) {
     User.create(req.body)
       .then((dbUserData) => res.json(dbUserData))
       .catch((err) => res.status(500).json(err));
   },
-  // current task
+  // update user --WORKS
   updateThought(req, res) {
     User.findOneAndUpdate(
       { _id: req.params.userId },
@@ -39,19 +39,45 @@ module.exports = {
       })
       .catch((err) => res.status(500).json(err));
   },
+  // delete user --WORKS
   deleteThought(req, res) {
-    User.findOneAndDelete(req.body)
-      .then((dbUserData) => res.json(dbUserData))
+    User.findOneAndDelete({ _id: req.params.userId })
+      .then((dbUserData) => {
+        if (!dbUserData) {
+          return res.status(404).json({ message: 'No user with this id!' });
+        }
+        res.json(dbUserData);
+      }) // add bonus remove thoughts
       .catch((err) => res.status(500).json(err));
   },
+  // add friend --WORKS
   addReaction(req, res) {
-    User.findOneAndUpdate(req.body)
-      .then((dbUserData) => res.json(dbUserData))
+    User.findOneAndUpdate(
+      { _id: req.params.userId },
+      { $addToSet: { friends: req.params.friendId } },
+      { runValidators: true, new: true }
+      )
+      .then((dbUserData) => {
+        if (!dbUserData) {
+          return res.status(404).json({ message: 'No user with this id!' });
+        }
+        res.json(dbUserData);
+      })
       .catch((err) => res.status(500).json(err));
   },
+  // remove friend --WORKS
   removeReaction(req, res) {
-    User.findOneAndUpdate(req.body)
-      .then((dbUserData) => res.json(dbUserData))
+    User.findOneAndUpdate(
+      { _id: req.params.userId },
+      { $pull: { friends: req.params.friendId } },
+      { runValidators: true, new: true }
+    )
+      .then((dbUserData) => {
+        if (!dbUserData) {
+          return res.status(404).json({ message: 'No user with this id!' });
+        }
+        res.json(dbUserData);
+      })
       .catch((err) => res.status(500).json(err));
   },
 };
